@@ -54,6 +54,12 @@ func WithPort(port int) ServerOption {
 	}
 }
 
+func WithAddr(addr string) ServerOption {
+	return func(s *Server) {
+		s.addr = addr
+	}
+}
+
 func (s *Server) GetAddr() string {
 	return s.addr
 }

@@ -1,9 +1,17 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"reverse-proxy/internal/api/handlers"
+
+	"github.com/gin-gonic/gin"
+)
 
 func HandleFuncs(g *gin.Engine) {
-	g.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Hello, World!"})
-	})
+	// g.GET("/*path", handlers.RPHandler)
+
+	apiGroup := g.Group("/api")
+	apiGroup.POST("/rp", handlers.AddRPHandler)
+	apiGroup.DELETE("/rp", handlers.DelRPHandler)
+	apiGroup.GET("/rp", handlers.GetRPHandler)
+	apiGroup.GET("/rp/reload", handlers.ReloadRPHandler)
 }

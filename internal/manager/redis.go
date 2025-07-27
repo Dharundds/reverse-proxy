@@ -155,6 +155,24 @@ func (r *Redis) Set(ctx context.Context, key string, value any, ttl ...time.Dura
 	return r.client.Set(ctx, key, value, expiration).Err()
 }
 
+func (r *Redis) HGetAll(ctx context.Context, key string) (map[string]string, error) {
+	result, err := r.client.HGetAll(ctx, key).Result()
+	return result, err
+}
+
+func (r *Redis) HGet(ctx context.Context, key string, field string) (string, error) {
+	result, err := r.client.HGet(ctx, key, field).Result()
+	return result, err
+}
+
+func (r *Redis) HSet(ctx context.Context, key string, field string, value any) error {
+	return r.client.HSet(ctx, key, field, value).Err()
+}
+
+func (r *Redis) HDel(ctx context.Context, key string, fields ...string) error {
+	return r.client.HDel(ctx, key, fields...).Err()
+}
+
 // Del deletes one or more keys
 func (r *Redis) Del(ctx context.Context, keys ...string) error {
 	return r.client.Del(ctx, keys...).Err()
