@@ -8,7 +8,7 @@ function App() {
   const [notification, setNotification] = useState({ message: '', type: '' })
 
   // API base URL - adjust if needed
-  const API_BASE = 'http://100.126.5.92/api'
+  const API_BASE = 'http://api.rp.vm.home:5000/api'
 
   // Show notification
   const showNotification = (message, type = 'info') => {

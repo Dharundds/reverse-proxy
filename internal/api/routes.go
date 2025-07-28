@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HandleFuncs(g *gin.Engine) {
+func RegisterAPIRoutes(g *gin.Engine) {
 	// g.GET("/*path", handlers.RPHandler)
 
 	apiGroup := g.Group("/api")
@@ -14,4 +14,8 @@ func HandleFuncs(g *gin.Engine) {
 	apiGroup.DELETE("/rp", handlers.DelRPHandler)
 	apiGroup.GET("/rp", handlers.GetRPHandler)
 	apiGroup.GET("/rp/reload", handlers.ReloadRPHandler)
+}
+
+func RegisterRPHandler(g *gin.Engine) {
+	g.Any("/*path", handlers.RPHandler)
 }

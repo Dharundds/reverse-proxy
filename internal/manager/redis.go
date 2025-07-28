@@ -27,7 +27,7 @@ type Redis struct {
 
 type RedisOption func(r *Redis)
 
-func NewRedisManager(opts ...RedisOption) (*Redis, error) {
+func NewRedisManager(ctx context.Context, opts ...RedisOption) (*Redis, error) {
 	log.Info().Msg("Creating RedisManager")
 
 	r := &Redis{
@@ -49,7 +49,7 @@ func NewRedisManager(opts ...RedisOption) (*Redis, error) {
 	}
 
 	// Create connection immediately
-	err := r.createNewConnection()
+	err := r.createNewConnection(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Redis connection: %w", err)
 	}
@@ -109,17 +109,12 @@ func (r *Redis) Reconnect(ctx context.Context) error {
 		r.client.Close()
 	}
 
-	err := r.createNewConnection()
-	if err != nil {
-		return err
-	}
-
-	return r.client.Ping(ctx).Err()
+	return r.createNewConnection(ctx)
 }
 
 // Pinger implementation Ends -------
 
-func (r *Redis) createNewConnection() error {
+func (r *Redis) createNewConnection(ctx context.Context) error {
 	log.Info().Msgf("Creating Redis connection to %s:%s", r.host, r.port)
 
 	opts := &redis.Options{
@@ -135,7 +130,7 @@ func (r *Redis) createNewConnection() error {
 	}
 
 	r.client = redis.NewClient(opts)
-	return nil
+	return r.client.Ping(ctx).Err()
 }
 
 // Redis operations

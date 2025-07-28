@@ -6,6 +6,7 @@ import (
 	"reverse-proxy/internal/helpers"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 func RPHandler(c *gin.Context) {
@@ -16,6 +17,7 @@ func RPHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Reverse proxy not found"})
 		return
 	}
+	log.Info().Msgf("host: %s, val: %s", host, val)
 
 	targetHost := "http://" + host + ":" + val
 

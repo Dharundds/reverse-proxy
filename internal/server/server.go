@@ -2,6 +2,9 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
 	"reverse-proxy/internal/api"
 
 	"github.com/gin-contrib/cors"
@@ -25,7 +28,7 @@ func NewServer(options ...ServerOption) *Server {
 		id:          uuid.New(),
 		name:        "Reverse Proxy",
 		addr:        "",
-		port:        80,
+		port:        5000,
 		annInterval: 30,
 	}
 
@@ -76,27 +79,35 @@ func (s *Server) GetUUID() string {
 	return s.id.String()
 }
 
-// func StartFrontend() error {
-// 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-// 		// Construct the file path based on the request URL
-// 		path := filepath.Join(constants.BuildPath, r.URL.Path)
-// 		path = filepath.Clean(path)
-// 		// Check if the requested file exists
-// 		_, err := os.Stat(path)
-// 		if os.IsNotExist(err) || r.URL.Path == "/" {
-// 			// If the file does not exist or it's the root path, serve index.html
-// 			http.ServeFile(w, r, filepath.Join(constants.BuildPath, "index.html"))
-// 		} else {
-// 			// Otherwise, serve the static file
-// 			http.FileServer(http.Dir(constants.BuildPath)).ServeHTTP(w, r)
-// 		}
-// 	})
-// 	log.Info().Msgf("Frontend server starting on 3000")
-// 	return http.ListenAndServe(":3000", nil)
+func (s *Server) StartUI() error {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Construct the file path based on the request URL
+		path := filepath.Join("./dist", r.URL.Path)
+		path = filepath.Clean(path)
+		// Check if the requested file exists
+		_, err := os.Stat(path)
+		if os.IsNotExist(err) || r.URL.Path == "/" {
+			// If the file does not exist or it's the root path, serve index.html
+			http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
+		} else {
+			// Otherwise, serve the static file
+			http.FileServer(http.Dir("./dist")).ServeHTTP(w, r)
+		}
+	})
+	log.Info().Msgf("Frontend server starting on 3000")
+	return http.ListenAndServe(":3000", nil)
 
-// }
+}
 
-func (s *Server) StartBackend() error {
+func (s *Server) StartRP() error {
+	g := gin.Default()
+	api.RegisterRPHandler(g)
+	addr := ":80"
+	log.Info().Msgf("Starting backend server on %s", addr)
+	return g.Run(addr)
+}
+
+func (s *Server) StartAPI() error {
 	g := gin.Default()
 	// g.Header("Access-Control-Allow-Origin", "*")
 	// c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -111,7 +122,7 @@ func (s *Server) StartBackend() error {
 		ExposeHeaders: []string{"Content-Length", "Access-Control-Allow-Origin", "SOAPAction"}, // Headers exposed to the browser
 	}))
 
-	api.HandleFuncs(g)
+	api.RegisterAPIRoutes(g)
 	addr := fmt.Sprintf("%s:%d", s.addr, s.port)
 	log.Info().Msgf("Starting backend server on %s", addr)
 	return g.Run(addr)

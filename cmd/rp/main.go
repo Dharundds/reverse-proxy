@@ -23,7 +23,9 @@ func serverInit(ctx context.Context) {
 		logger.WithLevel("info"),
 	)
 
-	constants.Redis, err = manager.NewRedisManager()
+	constants.Redis, err = manager.NewRedisManager(
+		ctx,
+	)
 	if err != nil {
 		log.Error().Msgf("Error while initialising Redis -> %v", err)
 	}
@@ -54,31 +56,38 @@ func main() {
 	}
 
 	// Get port from environment variable with fallback to 5000
-	portStr := os.Getenv("PORT")
+	portStr := os.Getenv("API_PORT")
 	if portStr == "" {
-		portStr = "80"
+		portStr = "5000"
 	}
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		log.Error().Msgf("Invalid PORT value '%s', using default 5000: %v", portStr, err)
-		port = 80
+		log.Error().Msgf("Invalid API_PORT value '%s', using default 5000: %v", portStr, err)
+		port = 5000
 	}
 
-	// Get host from environment variable with fallback to "0.0.0.0"
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "0.0.0.0"
-	}
+	srv := server.NewServer(
+		server.WithPort(port),
+	)
 
 	go func() {
-		srv := server.NewServer(
-			server.WithPort(port),
-			server.WithAddr(host),
-		)
-		if err := srv.StartBackend(); err != nil {
-			log.Error().Msgf("Error while starting backend -> %v", err)
+		if err := srv.StartRP(); err != nil {
+			log.Error().Msgf("Error while starting RP -> %v", err)
 		}
 	}()
+
+	go func() {
+		if err := srv.StartAPI(); err != nil {
+			log.Error().Msgf("Error while starting api -> %v", err)
+		}
+	}()
+
+	go func() {
+		if err := srv.StartUI(); err != nil {
+			log.Error().Msgf("Error while starting ui -> %v", err)
+		}
+	}()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
